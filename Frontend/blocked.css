@@ -1,0 +1,65 @@
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.container {
+  background-color: #2a2a2a;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+  max-width: 500px;
+  width: 100%;
+}
+
+.icon {
+  margin-bottom: 20px;
+}
+
+.icon img {
+  width: 48px; /* Standard size for a formal icon */
+  height: 48px;
+  vertical-align: middle;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 15px;
+}
+
+.message {
+  font-size: 16px;
+  color: #cccccc;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.button {
+  display: inline-block;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  background-color: #555;
+  color: white;
+  text-decoration: none;
+  border: none;
+}
+
+.button:hover {
+  background-color: #666;
+  transform: translateY(-1px);
+}

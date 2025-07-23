@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Productivity Tracker</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="main-title">Productivity Tracker</h1>
+
+    <div class="section">
+      <h2 class="section-title">Blocked Sites</h2>
+      <div class="input-group">
+        <input type="text" id="blockSiteInput" placeholder="Add site to block (e.g., youtube.com)" class="input-field"/>
+        <button id="addBlockedSite" class="button button-primary">Add Site</button>
+      </div>
+      <ul id="blockedSitesList" class="list-container">
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Today's Report</h2>
+      <div id="productivityReport" class="report-container">
+        <p class="no-data-message">No report for today yet.</p>
+      </div>
+    </div>
+
+    <div class="actions-group">
+      <button id="clearData" class="button button-secondary">Clear All Data</button>
+      <button id="syncData" class="button button-primary">Sync Data</button>
+    </div>
+  </div>
+
+  <div id="messageBox" class="message-box" style="display: none;">
+    <div id="messageBoxContent" class="message-box-content"></div>
+    <button id="messageBoxClose" class="message-box-close">OK</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
