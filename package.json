@@ -1,0 +1,21 @@
+{
+  "name": "worklog",
+  "version": "1.0.0",
+  "description": "This project is a comprehensive productivity tool designed to help users manage their online time effectively. It consists of a backend API built with the MERN (MongoDB, Express.js, React/Node.js) stack and a powerful Chrome Extension that tracks website usage and blocks distracting sites.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node backend/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.17.0"
+  }
+}

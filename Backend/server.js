@@ -1,5 +1,6 @@
 // Load environment variables from a .env file
 const dotenv = require('dotenv');
+require('dotenv').config({ path: './backend/.env' });
 // Import the function to connect to the database
 const connectDB = require('./config/db');
 // Import the CORS middleware
