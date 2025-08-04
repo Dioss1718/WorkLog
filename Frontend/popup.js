@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  // --- DOM Element References ---
   const blockSiteInput = document.getElementById('blockSiteInput');
   const addBlockedSiteButton = document.getElementById('addBlockedSite');
   const blockedSitesList = document.getElementById('blockedSitesList');
@@ -11,6 +12,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const BACKEND_URL = 'http://localhost:5000/api';
 
+  /**
+   * Displays a message in a dedicated message box.
+   * @param {string} message - The message to be displayed.
+   */
   function showMessageBox(message) {
     if (messageBoxContent && messageBox) {
       messageBoxContent.textContent = message;
@@ -18,12 +23,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Event listener to close the message box.
   if (messageBoxClose) {
     messageBoxClose.addEventListener('click', () => {
       messageBox.style.display = 'none';
     });
   }
 
+  /**
+   * Loads blocked sites from storage and renders them in the UI.
+   */
   async function loadBlockedSites() {
     const result = await chrome.storage.sync.get(['blockedSites']);
     const blockedSites = result.blockedSites || [];
@@ -49,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Event listener for adding a new blocked site.
   if (addBlockedSiteButton) {
     addBlockedSiteButton.addEventListener('click', async () => {
       const site = blockSiteInput.value.trim();
@@ -72,10 +82,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadBlockedSites();
       showMessageBox(`"${site}" was added.`);
 
+      // Notify the background script to update its list of blocked sites.
       chrome.runtime.sendMessage({ action: "updateBlockedSites" });
     });
   }
 
+  // Event delegation for removing a blocked site.
   if (blockedSitesList) {
     blockedSitesList.addEventListener('click', async (event) => {
       if (event.target.classList.contains('remove-button')) {
@@ -88,11 +100,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadBlockedSites();
         showMessageBox(`"${siteToRemove}" was removed.`);
 
+        // Notify the background script about the change.
         chrome.runtime.sendMessage({ action: "updateBlockedSites" });
       }
     });
   }
 
+  /**
+   * Loads and renders the productivity report for today.
+   */
   async function loadProductivityReport() {
     const today = new Date().toISOString().slice(0, 10);
     const localResult = await chrome.storage.local.get(['websiteTime']);
@@ -102,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     productivityReportDiv.innerHTML = '';
 
+    // Sort sites by time spent in descending order.
     const sortedSites = Object.entries(todayData).sort(([, timeA], [, timeB]) => timeB - timeA);
 
     if (sortedSites.length === 0) {
@@ -123,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Event listener to clear all local data.
   if (clearDataButton) {
     clearDataButton.addEventListener('click', async () => {
       showMessageBox('Clearing all saved data...');
@@ -135,15 +153,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Event listener for the sync button (currently a placeholder).
   if (syncDataButton) {
     syncDataButton.addEventListener('click', async () => {
       showMessageBox('This sync feature is not yet connected to a backend. It will be added later!');
     });
   }
 
+  // Initial load of data when the popup opens.
   loadBlockedSites();
   loadProductivityReport();
 
+  // Listener for messages from the background script to refresh the report.
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "updateReport") {
       loadProductivityReport();

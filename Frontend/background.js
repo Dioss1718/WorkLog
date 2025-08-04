@@ -1,13 +1,18 @@
+// --- Global State ---
 let activeTabId = null;
 let activeTabUrl = null;
-let lastActiveTime = {};
-let websiteTime = {};
-let blockedSites = [];
+let lastActiveTime = {}; // Tracks the last active time for each tab
+let websiteTime = {}; // Stores total time spent per website
+let blockedSites = []; // List of sites to block
 let syncIntervalId = null;
 
+// --- Constants ---
 const BACKEND_URL = 'http://localhost:5000/api';
 const SYNC_INTERVAL_MS = 60 * 1000;
 
+/**
+ * Extracts the clean domain from a URL.
+ */
 function getDomain(url) {
   try {
     const urlObj = new URL(url);
@@ -21,20 +26,32 @@ function getDomain(url) {
   }
 }
 
+/**
+ * Loads blocked sites from Chrome storage.
+ */
 async function loadBlockedSites() {
   const result = await chrome.storage.sync.get(['blockedSites']);
   blockedSites = result.blockedSites || [];
 }
 
+/**
+ * Loads website time data from Chrome local storage.
+ */
 async function loadWebsiteTime() {
   const result = await chrome.storage.local.get(['websiteTime']);
   websiteTime = result.websiteTime || {};
 }
 
+/**
+ * Saves website time data to local storage.
+ */
 function saveWebsiteTime() {
   chrome.storage.local.set({ websiteTime });
 }
 
+/**
+ * Calculates and updates time spent on the active tab.
+ */
 function updateTime() {
   if (activeTabId && activeTabUrl) {
     const domain = getDomain(activeTabUrl);
@@ -51,14 +68,16 @@ function updateTime() {
         websiteTime[today][domain] = (websiteTime[today][domain] || 0) + timeSpent;
         saveWebsiteTime();
 
-        chrome.runtime.sendMessage({ action: "updateReport" }).catch(() => {
-        });
+        chrome.runtime.sendMessage({ action: "updateReport" }).catch(() => {});
       }
       lastActiveTime[activeTabId] = now;
     }
   }
 }
 
+/**
+ * Syncs local data with the backend server.
+ */
 async function syncDataWithBackend() {
   const authResult = await chrome.storage.sync.get(['authToken']);
   if (!authResult.authToken) {
@@ -88,12 +107,18 @@ async function syncDataWithBackend() {
     const result = await response.json();
 
     if (response.ok) {
+      // Handle successful sync
     } else {
+      // Handle backend errors
     }
   } catch (error) {
+    // Handle network errors
   }
 }
 
+/**
+ * Manages the periodic data sync interval based on user's auth status.
+ */
 async function manageSyncInterval() {
   const authResult = await chrome.storage.sync.get(['authToken']);
   if (authResult.authToken) {
@@ -109,28 +134,29 @@ async function manageSyncInterval() {
   }
 }
 
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  updateTime();
+// --- Event Listeners ---
 
+// Fired when a tab is activated.
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  updateTime(); // Record time for the previous tab
   activeTabId = activeInfo.tabId;
   try {
     const tab = await chrome.tabs.get(activeTabId);
     activeTabUrl = tab.url;
     lastActiveTime[activeTabId] = Date.now();
-
+    // Inject content script on new tabs
     if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('edge://')) {
       chrome.scripting.executeScript({
         target: { tabId: activeTabId },
         files: ['content.js']
-      }).catch(error => {
-      });
+      }).catch(() => {});
     }
-
   } catch (e) {
     activeTabUrl = null;
   }
 });
 
+// Fired when a tab's URL changes.
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (tabId === activeTabId && changeInfo.url) {
     updateTime();
@@ -138,6 +164,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     lastActiveTime[activeTabId] = Date.now();
   }
 
+  // Check for blocked sites on page load and redirect
   if (changeInfo.status === 'loading' && tab.url) {
     const domain = getDomain(tab.url);
     if (domain && blockedSites.some(blocked => domain.includes(blocked))) {
@@ -146,6 +173,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
+// Fired when a tab is closed.
 chrome.tabs.onRemoved.addListener((tabId) => {
   if (tabId === activeTabId) {
     updateTime();
@@ -155,6 +183,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   delete lastActiveTime[tabId];
 });
 
+// Fired when a window gains or loses focus.
 chrome.windows.onFocusChanged.addListener((windowId) => {
   if (windowId === chrome.windows.WINDOW_ID_NONE) {
     updateTime();
@@ -172,6 +201,7 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
   }
 });
 
+// Listens for messages from other parts of the extension.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "updateBlockedSites") {
     loadBlockedSites();
@@ -182,6 +212,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
+// Listens for changes in Chrome storage.
 chrome.storage.sync.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.authToken) {
     manageSyncInterval();
@@ -189,11 +220,15 @@ chrome.storage.sync.onChanged.addListener((changes, namespace) => {
   }
 });
 
+/**
+ * Initializes the extension on startup.
+ */
 async function initialize() {
   await loadBlockedSites();
   await loadWebsiteTime();
-  setInterval(updateTime, 1000);
+  setInterval(updateTime, 1000); // Timer for tracking time
 
+  // Get the initially active tab
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length > 0) {
       activeTabId = tabs[0].id;
